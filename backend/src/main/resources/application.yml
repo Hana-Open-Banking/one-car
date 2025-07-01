@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: onecar
+  profiles:
+    active: local  # 기본 프로파일을 local로 설정
+#  jpa:
+#    database-platform: org.hibernate.dialect.MySQLDialect
+#    hibernate:
+#      ddl-auto: update
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQLDialect
+  config:
+    import: application-datasource.yml, application-setting.yml
+

@@ -3,4 +3,4 @@ server:
 
 swagger:
   #  server-url: ${SERVER_URL}
-  server-url:
+  server-url: http://localhost:8081

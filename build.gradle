@@ -39,7 +39,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	
 	// Database
-	runtimeOnly 'com.h2database:h2'
+	// runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 	
 	// Swagger
@@ -48,6 +48,11 @@ dependencies {
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Oracle PKI 관련 라이브러리
+	implementation 'com.oracle.database.security:oraclepki:23.3.0.23.09'
+	implementation 'com.oracle.database.security:osdt_cert:21.17.0.0'
+	implementation 'com.oracle.database.security:osdt_core:21.17.0.0'
 }
 
 tasks.named('test') {

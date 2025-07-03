@@ -122,7 +122,7 @@ public class AuthController {
     }
     
     @GetMapping("/check-id/{id}")
-    @Operation(summary = "아이디 중복 확인", description = "회원가입 시 아이디 중복 여부를 확인합니다.")
+
     public ResponseEntity<BasicResponse> checkIdAvailability(@PathVariable String id) {
         boolean isAvailable = authService.checkIdAvailability(id);
         

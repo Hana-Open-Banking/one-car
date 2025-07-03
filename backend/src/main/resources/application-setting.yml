@@ -1,6 +1,2 @@
 server:
   port: 8081
-
-swagger:
-  #  server-url: ${SERVER_URL}
-  server-url: http://localhost:8081

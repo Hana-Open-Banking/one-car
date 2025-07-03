@@ -1,10 +1,4 @@
-#spring:
-#  datasource:
-#    url: ${DATASOURCE_URL}
-#    username: ${DATASOURCE_USERNAME}
-#    password: ${DATASOURCE_PASSWORD}
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-
+# Oracle Cloud DataSource는 OracleCloudConfig에서 직접 생성
 spring:
   jpa:
     hibernate:

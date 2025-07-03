@@ -60,4 +60,49 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Spring Security 인증 실패 예외 처리
+     */
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    protected ResponseEntity<BasicResponse> handleBadCredentialsException(
+            org.springframework.security.authentication.BadCredentialsException e) {
+        log.warn("로그인 실패 - 잘못된 인증 정보: {}", e.getMessage());
+        BasicResponse response = BasicResponse.builder()
+                .status(401)
+                .message("아이디 또는 비밀번호가 올바르지 않습니다.")
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
+     * Spring Security 사용자를 찾을 수 없음 예외 처리
+     */
+    @ExceptionHandler(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
+    protected ResponseEntity<BasicResponse> handleUsernameNotFoundException(
+            org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+        log.warn("로그인 실패 - 사용자를 찾을 수 없음: {}", e.getMessage());
+        BasicResponse response = BasicResponse.builder()
+                .status(404)
+                .message("존재하지 않는 사용자입니다.")
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Spring Security 인증 예외 일반 처리
+     */
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    protected ResponseEntity<BasicResponse> handleAuthenticationException(
+            org.springframework.security.core.AuthenticationException e) {
+        log.warn("인증 실패: {}", e.getMessage());
+        BasicResponse response = BasicResponse.builder()
+                .status(401)
+                .message("인증에 실패했습니다. 아이디와 비밀번호를 확인해주세요.")
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
 }

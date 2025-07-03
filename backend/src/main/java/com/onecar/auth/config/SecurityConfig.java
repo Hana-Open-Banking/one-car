@@ -61,6 +61,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // 인증 없이 접근 가능한 경로
                 .requestMatchers("/api/auth/signup", "/api/auth/signin", "/api/auth/check-id/**").permitAll()
+                .requestMatchers("/api/auth/kftc-oauth-redirect-callback").permitAll()
                 .requestMatchers("/api/health", "/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 // 나머지는 인증 필요

@@ -1,6 +1,7 @@
 package com.onecar.auth.service;
 
 import com.onecar.auth.dto.KftcTokenResponse;
+import com.onecar.auth.entity.OAuthSession;
 import com.onecar.common.exception.BusinessException;
 import com.onecar.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class KftcOAuthService {
     
     private final WebClient webClient;
     private final AuthService authService;
+    private final OAuthSessionService oAuthSessionService;
     
     @Value("${oauth.client.client-id}")
     private String kftcClientId;
@@ -61,6 +63,45 @@ public class KftcOAuthService {
             
         } catch (Exception e) {
             log.error("KFTC OAuth 연동 실패 - code: {}, error: {}", code, e.getMessage(), e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    public String processKftcOAuthRedirectCallback(String code, String state) {
+        log.info("=== OneCard KFTC OAuth 리디렉트 콜백 처리 시작 ===");
+        log.info("Authorization Code: {}", code.substring(0, Math.min(code.length(), 20)) + "...");
+        log.info("State: {}", state);
+        
+        try {
+            // 1. 세션 검증 및 사용자 식별
+            log.info("1단계: OAuth 세션 검증 시작");
+            OAuthSession session = oAuthSessionService.findAndValidateSession(state);
+            String memberId = session.getMemberId();
+            log.info("1단계: OAuth 세션 검증 완료 - memberId: {}", memberId);
+            
+            // 2. KFTC에서 토큰 받아오기
+            log.info("2단계: KFTC 토큰 요청 시작");
+            KftcTokenResponse tokenResponse = getTokenFromKftc(code);
+            log.info("2단계: KFTC 토큰 응답 수신 완료");
+            log.info("KFTC에서 받은 user_seq_no: {}", tokenResponse.getUserSeqNo());
+            log.info("KFTC에서 받은 user_name: {}", tokenResponse.getUserName());
+            
+            // 3. user_seq_no 업데이트
+            log.info("3단계: user_seq_no 업데이트 시작");
+            authService.updateUserSeqNo(memberId, tokenResponse.getUserSeqNo());
+            log.info("3단계: user_seq_no 업데이트 완료");
+            
+            // 4. 세션 완료 처리
+            log.info("4단계: OAuth 세션 완료 처리");
+            oAuthSessionService.completeSession(state);
+            
+            log.info("=== KFTC OAuth 연동 완료 ===");
+            log.info("OneCard 회원 ID: {}, KFTC user_seq_no: {}", memberId, tokenResponse.getUserSeqNo());
+            
+            return memberId;
+            
+        } catch (Exception e) {
+            log.error("KFTC OAuth 연동 실패 - code: {}, state: {}, error: {}", code, state, e.getMessage(), e);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }

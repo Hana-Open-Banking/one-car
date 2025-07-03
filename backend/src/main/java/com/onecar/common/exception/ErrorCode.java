@@ -1,6 +1,7 @@
 package com.onecar.common.exception;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
 public enum ErrorCode {
@@ -25,7 +26,14 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "U_005", "사용자를 찾을 수 없습니다"),
     EXPIRED_TOKEN(401, "T_002", "만료된 토큰입니다"),
     USER_SEQ_NO_NOT_FOUND(404, "U_006", "금융결제원 사용자 시퀀스 번호가 설정되지 않았습니다"),
-    ;
+
+    DUPLICATE_RESOURCE(409, "R_001", "이미 존재하는 리소스입니다"),
+
+    DUPLICATE_LICENSE_PLATE(409, "R_002", "이미 등록된 번호판입니다"),
+    DUPLICATE_VIN(409, "R_003", "이미 존재하는 VIN 입니다"),
+    
+    CAR_NOT_FOUND(404, "C_001", "차량 정보를 찾을 수 없습니다"),
+    OWNER_MISMATCH(403, "C_002", "차량 소유자 정보가 일치하지 않습니다");
 
     private final int status;
     private final String code;

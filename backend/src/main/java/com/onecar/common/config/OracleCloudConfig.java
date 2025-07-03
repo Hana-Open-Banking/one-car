@@ -167,13 +167,6 @@ public class OracleCloudConfig {
         System.setProperty("oracle.net.wallet_location",
                 "(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=" + walletPath + ")))");
 
-        // SSO 관련 설정
-        // System.setProperty("javax.net.ssl.trustStore", walletPath + "/cwallet.sso");
-        // System.setProperty("javax.net.ssl.trustStoreType", "SSO");
-        // System.setProperty("javax.net.ssl.keyStore", walletPath + "/cwallet.sso");
-        // System.setProperty("javax.net.ssl.keyStoreType", "SSO");
-        // System.setProperty("oracle.net.authentication_services", "(TCPS)");
-
         return createHikariDataSource();
     }
 
@@ -181,14 +174,7 @@ public class OracleCloudConfig {
         log.info("JKS 방식으로 연결 시도");
 
         // JKS 설정
-        // System.setProperty("oracle.net.tns_admin", walletPath);
-        // System.setProperty("javax.net.ssl.trustStore", walletPath + "/truststore.jks");
-        // System.setProperty("javax.net.ssl.trustStorePassword", "Data2504");
-        // System.setProperty("javax.net.ssl.trustStoreType", "JKS");
-        // System.setProperty("javax.net.ssl.keyStore", walletPath + "/keystore.jks");
-        // System.setProperty("javax.net.ssl.keyStorePassword", "Data2504");
-        // System.setProperty("javax.net.ssl.keyStoreType", "JKS");
-        // System.setProperty("oracle.net.ssl_server_dn_match", "true");
+        System.setProperty("oracle.net.tns_admin", walletPath);
 
         return createHikariDataSource();
     }

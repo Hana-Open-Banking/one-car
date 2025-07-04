@@ -7,7 +7,8 @@ interface AuthContextType {
   hasOpenBanking: boolean
   connectedServices: string[]
   userName: string
-  login: (name: string) => void
+  accessToken: string | null
+  login: (name: string, token: string) => void
   logout: () => void
   setOpenBankingConnected: (services?: string[]) => void
 }
@@ -15,36 +16,39 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [hasOpenBanking, setHasOpenBanking] = useState(false)
   const [connectedServices, setConnectedServices] = useState<string[]>([])
   const [userName, setUserName] = useState("")
 
+  // accessToken의 존재 여부로 isLoggedIn을 계산
+  const isLoggedIn = !!accessToken
+
   useEffect(() => {
     // 로그인 상태 확인
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true"
+    const token = localStorage.getItem("accessToken")
     const openBanking = localStorage.getItem("hasOpenBanking") === "true"
     const services = JSON.parse(localStorage.getItem("connectedServices") || "[]")
     const name = localStorage.getItem("userName") || ""
-    setIsLoggedIn(loggedIn)
+    setAccessToken(token)
     setHasOpenBanking(openBanking)
     setConnectedServices(services)
     setUserName(name)
   }, [])
 
-  const login = (name: string) => {
-    localStorage.setItem("isLoggedIn", "true")
+  const login = (name: string, token: string) => {
+    localStorage.setItem("accessToken", token)
     localStorage.setItem("userName", name)
-    setIsLoggedIn(true)
+    setAccessToken(token)
     setUserName(name)
   }
 
   const logout = () => {
-    localStorage.removeItem("isLoggedIn")
+    localStorage.removeItem("accessToken")
     localStorage.removeItem("hasOpenBanking")
     localStorage.removeItem("connectedServices")
     localStorage.removeItem("userName")
-    setIsLoggedIn(false)
+    setAccessToken(null)
     setHasOpenBanking(false)
     setConnectedServices([])
     setUserName("")
@@ -59,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, hasOpenBanking, connectedServices, userName, login, logout, setOpenBankingConnected }}
+      value={{ isLoggedIn, hasOpenBanking, connectedServices, userName, accessToken, login, logout, setOpenBankingConnected }}
     >
       {children}
     </AuthContext.Provider>

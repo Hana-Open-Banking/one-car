@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { CommonHeader } from "@/components/common-header"
 import Link from "next/link"
+import axios from "axios"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -21,17 +22,36 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const { login } = useAuth()
 
-  const handleLogin = () => {
-    // 실제로는 서버에서 인증 후 사용자 정보 받아옴
-    // 여기서는 임시로 이메일에서 이름 추출
-    const userName = formData.email.split("@")[0] || "사용자"
-    login(userName)
-
-    const redirect = searchParams.get("redirect")
-    if (redirect === "openbanking") {
-      router.push("/dashboard")
-    } else {
-      router.push("/") // 기본적으로 홈페이지로 이동
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post(
+        "http://34.47.89.78:8080/api/auth/signin",
+        {
+          id: formData.email,
+          password: formData.password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "*/*",
+          },
+        }
+      )
+      // JWT 토큰을 AuthContext로 저장
+      login(response.data.data.member_info.name, response.data.data.access_token)
+      // 로그인 성공 후 라우팅
+      const redirect = searchParams.get("redirect")
+      if (redirect === "openbanking") {
+        router.push("/dashboard")
+      } else {
+        router.push("/")
+      }
+    } catch (error: any) {
+      if (error.response) {
+        alert(error.response.data.message || "로그인 실패")
+      } else {
+        alert("네트워크 오류")
+      }
     }
   }
 
@@ -50,7 +70,7 @@ export default function LoginPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-center text-xl">로그인</CardTitle>
+              <CardTitle className="text-center text-xl">로그인(onecar_user / OnecarPass123!)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">

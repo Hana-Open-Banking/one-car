@@ -5,7 +5,6 @@ import com.onecar.car.dto.CarRegistrationRequest;
 import com.onecar.car.entity.Car;
 import com.onecar.car.entity.OnecarMyCar;
 import com.onecar.car.entity.UserCar;
-import com.onecar.car.repository.CarRepository;
 import com.onecar.car.repository.OnecarMyCarRepository;
 import com.onecar.car.repository.UserCarRepository;
 import com.onecar.common.exception.BusinessException;

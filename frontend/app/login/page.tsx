@@ -38,7 +38,7 @@ export default function LoginPage() {
         }
       )
       // JWT 토큰을 AuthContext로 저장
-      login(formData.email, response.data.data)
+      login(response.data.data.member_info.name, response.data.data.access_token)
       // 로그인 성공 후 라우팅
       const redirect = searchParams.get("redirect")
       if (redirect === "openbanking") {

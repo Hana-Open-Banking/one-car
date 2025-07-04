@@ -13,9 +13,13 @@ import { CommonHeader } from "@/components/common-header"
 import { OpenBankingModal } from "@/components/open-banking-modal"
 import { TelecomSelection } from "@/components/telecom-selection"
 import { UserVerification } from "@/components/user-verification"
+import api from "@/lib/api"
 
 export default function MyCarsPage() {
   const { isLoggedIn, hasOpenBanking, setOpenBankingConnected } = useAuth()
+  const [cars, setCars] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [hasRegisteredCars, setHasRegisteredCars] = useState(false)
   const [showOpenBankingModal, setShowOpenBankingModal] = useState(false)
   const [showTelecomModal, setShowTelecomModal] = useState(false)
@@ -25,6 +29,23 @@ export default function MyCarsPage() {
     owner: "",
   })
   const router = useRouter()
+
+  useEffect(() => {
+    // 차량 정보 불러오기
+    async function fetchCars() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await api.get("/cars/my-cars")
+        setCars(res.data.data || [])
+      } catch (e: any) {
+        setError("차량 정보를 불러오지 못했습니다.")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCars()
+  }, [])
 
   useEffect(() => {
     // 실제로는 서버에서 등록된 차량 확인
@@ -65,6 +86,21 @@ export default function MyCarsPage() {
   const handleVerificationSuccess = () => {
     setShowVerificationModal(false)
     setOpenBankingConnected()
+  }
+
+  // 로딩/에러 처리
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">차량 정보를 불러오는 중...</div>
+  }
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>
+  }
+
+  // 차량이 없는 경우
+  if (!cars || cars.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">등록된 차량이 없습니다.</div>
+    )
   }
 
   // 차량이 등록되지 않은 경우 - 차량 등록 화면 표시 (로그인 상태와 관계없이)
@@ -143,22 +179,6 @@ export default function MyCarsPage() {
   }
 
   // 기존 내차관리 페이지 내용 (차량이 등록된 경우에만 표시)
-  const cars = [
-    {
-      id: 1,
-      name: "현대 아반떼",
-      year: "2022",
-      number: carInfo.number || "12가 3456",
-      image: "/placeholder.svg?height=200&width=300&text=현대+아반떼",
-      mileage: 45000,
-      fuelType: "휘발유",
-      purchaseDate: "2022.03.15",
-      insuranceExpiry: "2024.03.14",
-      inspectionDue: "2024.06.15",
-      lastService: "2023.12.10",
-    },
-  ]
-
   const carFinancialSummary = {
     monthlyInsurance: 125000,
     loanRemaining: 15600000,
@@ -224,26 +244,26 @@ export default function MyCarsPage() {
 
         <div className="max-w-7xl mx-auto p-4 space-y-6">
           {/* 차량 정보 카드 - 항상 표시 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cars.map((car) => (
-              <Card key={car.id} className="overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {cars.map((car, idx) => (
+              <Card key={car.vin || idx} className="overflow-hidden">
                 <CardContent className="p-0">
                   <img
-                    src={car.image || "/placeholder.svg?height=200&width=300&text=현대+아반떼"}
-                    alt={car.name}
+                    src={car.carImage || "/placeholder.svg?height=200&width=300&text=차량이미지"}
+                    alt={car.model}
                     className="w-full h-48 object-cover"
                   />
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-xl">{car.name}</h3>
-                      <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">{car.year}년</span>
+                      <h3 className="font-semibold text-xl">{car.model}</h3>
+                      <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">{car.manufactureYear}년</span>
                     </div>
-                    <p className="text-gray-600 mb-3 font-medium">{car.number}</p>
+                    <p className="text-gray-600 mb-3 font-medium">{car.licensePlate}</p>
                     <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-4">
-                      <span>주행거리: {car.mileage.toLocaleString()}km</span>
+                      <span>주행거리: {car.mileage?.toLocaleString()}km</span>
                       <span>연료: {car.fuelType}</span>
-                      <span>구매일: {car.purchaseDate}</span>
-                      <span>최근정비: {car.lastService}</span>
+                      <span>배기량: {car.engineDisplacement}cc</span>
+                      <span>트림: {car.trim}</span>
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" className="flex-1 bg-transparent">

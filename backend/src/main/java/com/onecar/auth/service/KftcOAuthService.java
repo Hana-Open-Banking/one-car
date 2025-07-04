@@ -122,10 +122,10 @@ public class KftcOAuthService {
         formData.add("redirect_uri", kftcRedirectUri);
         formData.add("grant_type", "authorization_code");
         
-        log.info("KFTC 토큰 엔드포인트 호출: {}", kftcBaseUrl + "/oauth/token");
+        log.info("KFTC 토큰 엔드포인트 호출: {}", kftcBaseUrl + "/oauth/2.0/token");
         
         return webClient.post()
-                .uri(kftcBaseUrl + "/oauth/token")
+                .uri(kftcBaseUrl + "/oauth/2.0/token")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(formData))
                 .retrieve()

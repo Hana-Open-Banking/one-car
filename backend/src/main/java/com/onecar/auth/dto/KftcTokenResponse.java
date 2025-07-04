@@ -13,7 +13,7 @@ public class KftcTokenResponse {
     private String tokenType;
     
     @JsonProperty("expires_in")
-    private Long expiresIn;
+    private Integer expiresIn;
     
     @JsonProperty("refresh_token")
     private String refreshToken;

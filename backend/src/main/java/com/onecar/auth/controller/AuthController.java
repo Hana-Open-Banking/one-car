@@ -5,7 +5,6 @@ import com.onecar.auth.dto.KftcOAuthCallbackRequest;
 import com.onecar.auth.dto.RefreshTokenRequest;
 import com.onecar.auth.dto.SignInRequest;
 import com.onecar.auth.dto.SignUpRequest;
-import com.onecar.auth.dto.UpdateUserSeqNoRequest;
 import com.onecar.auth.service.AuthService;
 import com.onecar.auth.service.KftcOAuthService;
 import com.onecar.auth.service.OAuthSessionService;
@@ -124,7 +123,7 @@ public class AuthController {
     }
     
     @GetMapping("/check-id/{id}")
-
+    @Operation(summary = "아이디 중복 확인", description = "아이디 중복 확인을 진행합니다.")
     public ResponseEntity<BasicResponse> checkIdAvailability(@PathVariable String id) {
         boolean isAvailable = authService.checkIdAvailability(id);
         
@@ -153,27 +152,19 @@ public class AuthController {
         
         return ResponseEntity.ok(response);
     }
-    
-    @PutMapping("/user-seq-no")
-    @Operation(summary = "사용자 시퀀스 번호 업데이트", description = "금융결제원에서 받은 사용자 시퀀스 번호를 업데이트합니다.")
-    public ResponseEntity<BasicResponse> updateUserSeqNo(
-            @Parameter(hidden = true) @RequestHeader("Authorization") String authorization,
-            @Valid @RequestBody UpdateUserSeqNoRequest request) {
+
+    @GetMapping("/kftc-access-token")
+    @Operation(summary = "KFTC Access Token 조회", description = "Access Token으로 KFTC Access Token을 조회합니다.")
+    public ResponseEntity<BasicResponse> getKftcAccessToken(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String authorization) {
         
         String accessToken = authorization.replace("Bearer ", "");
-        String userSeqNo = request.getUser_seq_no();
-        
-        // 토큰에서 회원 ID 추출
-        String memberId = authService.getMemberIdByAccessToken(accessToken);
-        
-        log.info("사용자 시퀀스 번호 업데이트 요청 - memberId: {}, userSeqNo: {}", memberId, userSeqNo);
-        
-        authService.updateUserSeqNo(memberId, userSeqNo);
+        String kftcAccessToken = authService.getKftcAccessTokenByOnecarToken(accessToken);
         
         BasicResponse response = BasicResponse.builder()
                 .status(200)
-                .message("사용자 시퀀스 번호가 업데이트되었습니다.")
-                .data(null)
+                .message("KFTC Access Token 조회 성공")
+                .data(Map.of("kftc_access_token", kftcAccessToken))
                 .build();
         
         return ResponseEntity.ok(response);

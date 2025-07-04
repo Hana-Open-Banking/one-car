@@ -16,6 +16,4 @@ public interface OnecarMemberRepository extends JpaRepository<OnecarMember, Stri
     boolean existsByEmail(String email);
     
     boolean existsByPhone(String phone);
-    
-    Optional<OnecarMember> findByUserSeqNo(String userSeqNo);
 }

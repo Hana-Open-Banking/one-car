@@ -37,9 +37,6 @@ public class OnecarMember extends DateTimeEntity implements UserDetails {
     @Column(name = "phone", nullable = false, length = 15)
     private String phone;
     
-    @Column(name = "user_seq_no", length = 50)
-    private String userSeqNo; // 금융결제원에서 받는 user_seq_no
-    
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     @Builder.Default
@@ -78,11 +75,6 @@ public class OnecarMember extends DateTimeEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return isActive;
-    }
-    
-    // 비즈니스 메서드
-    public void updateUserSeqNo(String userSeqNo) {
-        this.userSeqNo = userSeqNo;
     }
     
     public void deactivate() {

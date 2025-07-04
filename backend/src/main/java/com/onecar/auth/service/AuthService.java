@@ -3,8 +3,10 @@ package com.onecar.auth.service;
 import com.onecar.auth.dto.AuthResponse;
 import com.onecar.auth.dto.SignInRequest;
 import com.onecar.auth.dto.SignUpRequest;
+import com.onecar.auth.entity.KftcToken;
 import com.onecar.auth.entity.OnecarMember;
 import com.onecar.auth.entity.OnecarToken;
+import com.onecar.auth.repository.KftcTokenRepository;
 import com.onecar.auth.repository.OnecarMemberRepository;
 import com.onecar.auth.repository.OnecarTokenRepository;
 import com.onecar.auth.util.JwtTokenProvider;
@@ -29,6 +31,7 @@ public class AuthService {
     
     private final OnecarMemberRepository memberRepository;
     private final OnecarTokenRepository tokenRepository;
+    private final KftcTokenRepository kftcTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
@@ -125,14 +128,30 @@ public class AuthService {
     }
     
     @Transactional
-    public void updateUserSeqNo(String memberId, String userSeqNo) {
+    public void saveKftcTokenInfo(String memberId, String userSeqNo, String accessToken, 
+                                String refreshToken, String tokenType, Integer expiresIn, String scope) {
+        // 회원 존재 확인
         OnecarMember member = memberRepository.findByIdAndIsActiveTrue(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         
-        member.updateUserSeqNo(userSeqNo);
-        memberRepository.save(member);
+        // 기존 토큰이 있으면 삭제하고 새로 생성 (중복 방지)
+        kftcTokenRepository.deleteByMemberId(memberId);
         
-        log.info("사용자 시퀀스 번호 업데이트 완료 - memberId: {}, userSeqNo: {}", memberId, userSeqNo);
+        // 새 토큰 생성
+        KftcToken kftcToken = KftcToken.builder()
+                .memberId(memberId)
+                .userSeqNo(userSeqNo)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType(tokenType != null ? tokenType : "Bearer")
+                .expiresIn(expiresIn)
+                .expiresAt(expiresIn != null ? LocalDateTime.now().plusSeconds(expiresIn) : null)
+                .scope(scope)
+                .build();
+        
+        kftcTokenRepository.save(kftcToken);
+        
+        log.info("KFTC 토큰 정보 저장 완료 - memberId: {}, userSeqNo: {}", memberId, userSeqNo);
     }
     
     public String getUserSeqNoByAccessToken(String accessToken) {
@@ -143,14 +162,42 @@ public class AuthService {
             throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
         }
         
-        OnecarMember member = memberRepository.findByIdAndIsActiveTrue(token.getMemberId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        KftcToken kftcToken = kftcTokenRepository.findByMemberId(token.getMemberId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_SEQ_NO_NOT_FOUND));
         
-        if (member.getUserSeqNo() == null) {
-            throw new BusinessException(ErrorCode.USER_SEQ_NO_NOT_FOUND);
+        return kftcToken.getUserSeqNo();
+    }
+    
+    public String getKftcAccessTokenByOnecarToken(String onecarAccessToken) {
+        OnecarToken token = tokenRepository.findByAccessTokenAndIsRevokedFalse(onecarAccessToken)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
+        
+        if (token.isExpired()) {
+            throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
         }
         
-        return member.getUserSeqNo();
+        KftcToken kftcToken = kftcTokenRepository.findByMemberId(token.getMemberId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXPIRED_TOKEN));
+        
+        if (kftcToken.isExpired()) {
+            throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
+        }
+        
+        return kftcToken.getAccessToken();
+    }
+    
+    public KftcToken getKftcTokenByOnecarToken(String onecarAccessToken) {
+        OnecarToken token = tokenRepository.findByAccessTokenAndIsRevokedFalse(onecarAccessToken)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
+        
+        if (token.isExpired()) {
+            throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
+        }
+        
+        KftcToken kftcToken = kftcTokenRepository.findByMemberId(token.getMemberId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.EXPIRED_TOKEN));
+        
+        return kftcToken;
     }
     
     public String getMemberIdByAccessToken(String accessToken) {
@@ -195,6 +242,17 @@ public class AuthService {
         
         tokenRepository.save(token);
         
+        // KFTC 토큰에서 userSeqNo 조회
+        String userSeqNo = null;
+        try {
+            KftcToken kftcToken = kftcTokenRepository.findByMemberId(member.getId()).orElse(null);
+            if (kftcToken != null) {
+                userSeqNo = kftcToken.getUserSeqNo();
+            }
+        } catch (Exception e) {
+            log.debug("KFTC 토큰 조회 실패 (정상적인 경우일 수 있음): {}", e.getMessage());
+        }
+        
         // 응답 생성
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -205,7 +263,7 @@ public class AuthService {
                         .name(member.getName())
                         .email(member.getEmail())
                         .phone(member.getPhone())
-                        .userSeqNo(member.getUserSeqNo())
+                        .userSeqNo(userSeqNo) // KFTC 토큰에서 가져온 값
                         .build())
                 .build();
     }

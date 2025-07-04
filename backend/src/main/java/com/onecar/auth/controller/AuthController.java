@@ -22,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
@@ -219,9 +221,10 @@ public class AuthController {
         String state = oAuthSessionService.createOAuthSession(memberId);
         
         // OAuth URL 생성
+        String encodedScope = URLEncoder.encode(kftcScope, StandardCharsets.UTF_8);
         String oauthUrl = String.format(
-            "%s/oauth/2.0/authorize?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&state=%s",
-            kftcBaseUrl, kftcClientId, kftcRedirectUri, kftcScope, state
+                "%s/oauth/2.0/authorize?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&state=%s",
+                kftcBaseUrl, kftcClientId, kftcRedirectUri, encodedScope, state
         );
         
         log.info("KFTC OAuth URL 생성 완료 - memberId: {}, state: {}", memberId, state);

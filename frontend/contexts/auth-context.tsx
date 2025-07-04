@@ -16,20 +16,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [hasOpenBanking, setHasOpenBanking] = useState(false)
   const [connectedServices, setConnectedServices] = useState<string[]>([])
   const [userName, setUserName] = useState("")
-  const [accessToken, setAccessToken] = useState<string | null>(null)
+
+  // accessToken의 존재 여부로 isLoggedIn을 계산
+  const isLoggedIn = !!accessToken
 
   useEffect(() => {
     // 로그인 상태 확인
     const token = localStorage.getItem("accessToken")
-    const loggedIn = !!token
     const openBanking = localStorage.getItem("hasOpenBanking") === "true"
     const services = JSON.parse(localStorage.getItem("connectedServices") || "[]")
     const name = localStorage.getItem("userName") || ""
-    setIsLoggedIn(loggedIn)
     setAccessToken(token)
     setHasOpenBanking(openBanking)
     setConnectedServices(services)
@@ -38,20 +38,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (name: string, token: string) => {
     localStorage.setItem("accessToken", token)
-    localStorage.setItem("isLoggedIn", "true")
     localStorage.setItem("userName", name)
-    setIsLoggedIn(true)
     setAccessToken(token)
     setUserName(name)
   }
 
   const logout = () => {
     localStorage.removeItem("accessToken")
-    localStorage.removeItem("isLoggedIn")
     localStorage.removeItem("hasOpenBanking")
     localStorage.removeItem("connectedServices")
     localStorage.removeItem("userName")
-    setIsLoggedIn(false)
     setAccessToken(null)
     setHasOpenBanking(false)
     setConnectedServices([])

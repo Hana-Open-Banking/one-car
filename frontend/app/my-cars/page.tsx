@@ -20,7 +20,6 @@ export default function MyCarsPage() {
   const [cars, setCars] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [hasRegisteredCars, setHasRegisteredCars] = useState(false)
   const [showOpenBankingModal, setShowOpenBankingModal] = useState(false)
   const [showTelecomModal, setShowTelecomModal] = useState(false)
   const [showVerificationModal, setShowVerificationModal] = useState(false)
@@ -30,30 +29,26 @@ export default function MyCarsPage() {
   })
   const router = useRouter()
 
-  useEffect(() => {
-    // 차량 정보 불러오기
-    async function fetchCars() {
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await api.get("/cars/my-cars")
-        setCars(res.data.data || [])
-      } catch (e: any) {
-        setError("차량 정보를 불러오지 못했습니다.")
-      } finally {
-        setLoading(false)
-      }
+  // 차량 데이터 불러오기 함수
+  async function fetchCars() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await api.get("/cars/my-cars")
+      setCars(res.data.data || [])
+    } catch (e: any) {
+      setError("차량 정보를 불러오지 못했습니다.")
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchCars()
   }, [])
 
-  useEffect(() => {
-    // 실제로는 서버에서 등록된 차량 확인
-    const hasCars = localStorage.getItem("cars-registered") === "true"
-    setHasRegisteredCars(hasCars)
-  }, [])
-
-  const handleCarRegistration = () => {
+  // 차량 등록 핸들러에서 등록 성공 시 목록 갱신
+  const handleCarRegistration = async () => {
     if (!carInfo.number || !carInfo.owner) {
       return
     }
@@ -64,9 +59,13 @@ export default function MyCarsPage() {
       return
     }
 
-    // 로그인된 경우 차량 등록 처리
-    localStorage.setItem("cars-registered", "true")
-    setHasRegisteredCars(true)
+    // 차량 등록 API 호출 (실제 API 엔드포인트에 맞게 수정 필요)
+    try {
+      await api.post("/cars/register", carInfo)
+      await fetchCars() // 등록 후 목록 갱신
+    } catch (e) {
+      setError("차량 등록에 실패했습니다.")
+    }
   }
 
   const handleOpenBankingRegister = () => {
@@ -98,13 +97,6 @@ export default function MyCarsPage() {
 
   // 차량이 없는 경우
   if (!cars || cars.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">등록된 차량이 없습니다.</div>
-    )
-  }
-
-  // 차량이 등록되지 않은 경우 - 차량 등록 화면 표시 (로그인 상태와 관계없이)
-  if (!hasRegisteredCars) {
     return (
       <div className="min-h-screen bg-gradient-to-r from-green-50 to-blue-50">
         <CommonHeader />
